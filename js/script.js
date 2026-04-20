@@ -66,32 +66,63 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Smooth Scrolling for Anchor Links (handled gracefully natively via CSS scroll-behavior)
     // Optional JS handling for edge cases or specific offsets can be added here if needed.
 
-    // 4. Contact Form Submission (Mock behavior)
+    // 4. Contact Form Submission (Web3Forms - Envío real de correo)
     const form = document.querySelector('.contact-form');
     if (form) {
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = form.querySelector('button[type="submit"]');
             const originalText = btn.innerText;
             
             // Visual feedback
-            btn.innerText = 'Enviando...';
+            btn.innerText = 'Enviando mensaje...';
             btn.style.opacity = '0.8';
             btn.disabled = true;
 
-            // Simulate API Call
-            setTimeout(() => {
-                btn.innerText = '¡Mensaje Enviado!';
-                btn.style.backgroundColor = '#25D366'; // WhatsApp Green for success
-                form.reset();
+            // Preparar los datos del formulario
+            const formData = new FormData(form);
+            
+            // =================================================================
+            // INSTRUCCIONES PARA CONFIGURAR EL CORREO:
+            // 1. Entra a https://web3forms.com/
+            // 2. Ingresa tu correo real (al que quieres que lleguen los clientes)
+            // 3. Recibirás en tu correo un Access Key. 
+            // 4. Pega ese Access Key justo abajo reemplazando 'TU_ACCESS_KEY_AQUI'
+            // =================================================================
+            formData.append("access_key", "TU_ACCESS_KEY_AQUI");
+            
+            // Asunto del correo que recibirás
+            formData.append("subject", "Nuevo contacto desde Landing Page PP Logística");
+
+            try {
+                // Enviar la petición a Web3Forms
+                const response = await fetch('https://api.web3forms.com/submit', {
+                    method: 'POST',
+                    body: formData
+                });
                 
-                setTimeout(() => {
-                    btn.innerText = originalText;
-                    btn.style.backgroundColor = '';
-                    btn.style.opacity = '1';
-                    btn.disabled = false;
-                }, 3000);
-            }, 1000);
+                const data = await response.json();
+
+                if (data.success) {
+                    btn.innerText = '¡Mensaje Enviado!';
+                    btn.style.backgroundColor = '#25D366'; // WhatsApp Green
+                    form.reset();
+                } else {
+                    btn.innerText = 'Error al enviar (' + data.message + ')';
+                    btn.style.backgroundColor = '#E63946'; // Red
+                }
+            } catch (error) {
+                btn.innerText = 'Error de conexión';
+                btn.style.backgroundColor = '#E63946';
+            }
+            
+            // Restaurar el botón original después de 4 segundos
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = '';
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            }, 4000);
         });
     }
 
