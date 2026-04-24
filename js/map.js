@@ -1,138 +1,147 @@
 // Professional Interactive Map using Leaflet.js
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     var mapContainer = document.getElementById('professional-map');
     if (!mapContainer) return;
 
-    // Initialize the map, centered on Mexico
+    // Initialize the map, centered between Mexico and southern US
     var map = L.map('professional-map', {
         zoomControl: false,
-        scrollWheelZoom: false // Disable scroll wheel to prevent getting stuck
-    }).setView([23.6345, -95.2237], 5);
+        scrollWheelZoom: false
+    }).setView([23.5, -92], 5);
 
-    // Position zoom control at the top right to not interfere with the logo
+    // Position zoom control at the top right
     L.control.zoom({
         position: 'topright'
     }).addTo(map);
 
-    // Utilizar mapa estándar al estilo Google Maps con océano azul y tierra verde
+    // Google Maps tile layer
     L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
         attribution: '&copy; Google Maps',
         maxZoom: 20
     }).addTo(map);
 
-    // Custom marker icon with a bouncing red map pin and pulse
-    var pinSvgHtml = `
-        <div class="custom-pin-wrapper">
-            <div class="pin-pulse"></div>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36" class="pin-svg">
-                <path fill="#e63946" d="M12 0A12 12 0 0 0 0 12c0 6.6 12 24 12 24s12-17.4 12-24A12 12 0 0 0 12 0z"/>
-                <path fill="#b8212d" d="M12 0v36s12-17.4 12-24A12 12 0 0 0 12 0z"/>
-                <circle cx="12" cy="12" r="5" fill="#FFFFFF"/>
-            </svg>
-        </div>
-    `;
+    // ---- Marker Icon Factories ----
+    function createPinIcon(color) {
+        var svgHtml = `
+            <div class="custom-pin-wrapper">
+                <div class="pin-pulse" style="background-color: ${color}80;"></div>
+                <div class="pin-pulse-ring" style="--pulse-color: ${color};"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36" class="pin-svg">
+                    <path fill="${color}" d="M12 0A12 12 0 0 0 0 12c0 6.6 12 24 12 24s12-17.4 12-24A12 12 0 0 0 12 0z"/>
+                    <circle cx="12" cy="12" r="5" fill="#FFFFFF"/>
+                </svg>
+            </div>
+        `;
+        return L.divIcon({
+            className: 'custom-pin-marker',
+            html: svgHtml,
+            iconSize: [24, 36],
+            iconAnchor: [12, 36],
+            popupAnchor: [0, -32]
+        });
+    }
 
-    var pulsingPinIcon = L.divIcon({
-        className: 'custom-pin-marker',
-        html: pinSvgHtml,
-        iconSize: [24, 36],
-        iconAnchor: [12, 36], // bottom center of the pin
-        popupAnchor: [0, -32] // top of the pin
-    });
+    var puertosIcon = createPinIcon('#e63946');  // Rojo
+    var bodegasIcon = createPinIcon('#3b82f6');  // Azul
 
-    // Location Data
-    var locations = [
+    // ---- Location Data ----
+
+    // 1. Puertos de Operación (Rojo)
+    var puertosOperacion = [
         {
-            name: "Panamá City, Florida",
-            lat: 30.1588,
-            lng: -85.6602,
-            content: "<p>1805 Hannah Avenue, Panamá City, Fl.</p><p>Tel. (850) 769.64.27</p><p>Fax (850) 769.64.28</p>"
+            name: "Cancún, Q. Roo",
+            lat: 21.1619,
+            lng: -86.8515,
+            address: "Apto. SMZA. 301, MZA. 8, Carretera Cancún Lote 8 Parque Logístico APQ, 77560 Cancún, Q.R."
         },
         {
-            name: "Laredo, Texas",
-            lat: 27.5064,
-            lng: -99.5075,
-            content: "<p>Servicios Fronterizos</p><p>Cruce Terrestre</p>"
-        },
-        {
-            name: "Nuevo Laredo, Tamps.",
-            lat: 27.4828,
-            lng: -99.5100,
-            content: "<p>Aduana Fronteriza</p>"
-        },
-        {
-            name: "Altamira, Tamps.",
-            lat: 22.3934,
-            lng: -97.9352,
-            content: "<p>Puerto Marítimo</p>"
-        },
-        {
-            name: "Veracruz, Veracruz",
-            lat: 19.1738,
-            lng: -96.1342,
-            color: "#fca311",
-            content: "<p>Av. 5 de Mayo No 842-1A Entre Constitucion y Emparan Col. Centro Veracruz, Ver., CP 91700</p><br><p>Tel. (999) 248 8961</p>"
+            name: "Progreso, Yucatán",
+            lat: 21.2836,
+            lng: -89.6628,
+            address: "C. 27 168 A, Centro, 97320 Progreso, Yuc."
         },
         {
             name: "Mérida, Yucatán",
             lat: 20.9674,
             lng: -89.6236,
-            color: "#fca311",
-            content: "<p>Calle 81 No ext. 812 No. Int 3 x 110-A y 110-1, Sambulá, 97259 Mérida, Yucatán.</p><br><p>Tel. (999) 248 8961 Ext. 208</p><b style='color: #fff;'>Oficina Central</b>"
-        },
-        {
-            name: "Puerto Morelos, Q. Roo",
-            lat: 20.8466,
-            lng: -86.8756,
-            content: "<p>Operaciones Logísticas</p>"
-        },
-        {
-            name: "Manzanillo, Col.",
-            lat: 19.0535,
-            lng: -104.3161,
-            content: "<p>Puerto Marítimo en el Pacífico</p>"
+            address: "Calle 81 No. 812 x 110 – A y 110 - 1, Sambulá, 97259 Mérida, Yuc."
         },
         {
             name: "Lázaro Cárdenas, Mich.",
             lat: 17.9547,
             lng: -102.1963,
-            content: "<p>Puerto Industrial</p>"
+            address: "Colonia Brisas Lote 9, entre Lirios y Bahía, José Green, 60950 Cdad. Lázaro Cárdenas, Mich."
         },
         {
-            name: "CDMX y Edo. Méx.",
-            lat: 19.4326,
-            lng: -99.1332,
-            content: "<p>Aeropuerto Internacional de la Ciudad de México</p><p>Aduana Interior de México (Pantaco)</p>"
+            name: "Ciudad de México",
+            lat: 19.4190,
+            lng: -99.0878,
+            address: "C. Aviación Militar 53, Industrial Puerto Aéreo, Venustiano Carranza, 15710 Ciudad de México, CDMX"
         },
         {
-            name: "Miami, Florida",
-            lat: 25.7617,
-            lng: -80.1918,
-            content: "<p>Operaciones y Enlace</p>"
+            name: "Veracruz, Ver.",
+            lat: 19.1738,
+            lng: -96.1342,
+            address: "Calle Constitución número 99 entre Avenida Independencia y Callejón la Pastora, Col. Centro, C.P. 91700"
+        },
+        {
+            name: "Laredo, Texas",
+            lat: 28.5064,
+            lng: -99.5075,
+            address: "610 Vidal Cantu Rd Suite 2, Laredo, TX 78045, Estados Unidos"
         }
     ];
 
-    locations.forEach(function(loc) {
-        var headerStyle = loc.color ? 'style="color: ' + loc.color + ';"' : '';
-        var popupContent = `
-            <div class="pro-tooltip-content">
-                <div class="pro-tooltip-header" ${headerStyle}>${loc.name}</div>
-                <div class="pro-tooltip-body">${loc.content}</div>
-            </div>
-        `;
+    // 2. Bodegas (Azul)
+    var bodegas = [
+        {
+            name: "Miami, Florida",
+            lat: 25.8371,
+            lng: -80.3277,
+            address: "8001 NW 79 Ave, FL 33166"
+        },
+        {
+            name: "Panama City, Florida",
+            lat: 30.1588,
+            lng: -85.6602,
+            address: "5323 W Hwy 98 suite 215, Panama City, FL 32401"
+        },
+        {
+            name: "Laredo, Texas (Bodega)",
+            lat: 27.5164,
+            lng: -99.4875,
+            address: "610 Vidal Cantu Rd Suite 2, Laredo, TX 78045, Estados Unidos"
+        }
+    ];
 
-        var marker = L.marker([loc.lat, loc.lng], {icon: pulsingPinIcon})
-            .addTo(map)
-            .bindPopup(popupContent, {
-                className: 'pro-popup-wrapper',
-                closeButton: true,
-                minWidth: 220,
-                autoPanPadding: [50, 50]
+    // ---- Add Markers ----
+    function addMarkers(locations, icon, category) {
+        locations.forEach(function (loc) {
+            var popupContent = `
+                <div class="pro-tooltip-content">
+                    <div class="pro-tooltip-header">${loc.name}</div>
+                    <div class="pro-tooltip-body">
+                        <p class="pro-tooltip-category">${category}</p>
+                        <p>${loc.address}</p>
+                    </div>
+                </div>
+            `;
+
+            var marker = L.marker([loc.lat, loc.lng], { icon: icon })
+                .addTo(map)
+                .bindPopup(popupContent, {
+                    className: 'pro-popup-wrapper',
+                    closeButton: true,
+                    minWidth: 220,
+                    autoPanPadding: [50, 50]
+                });
+
+            marker.on('mouseover', function (e) {
+                this.openPopup();
             });
-            
-        // Open popup on hover
-        marker.on('mouseover', function (e) {
-            this.openPopup();
         });
-    });
+    }
+
+    addMarkers(puertosOperacion, puertosIcon, 'Puerto de Operación');
+    addMarkers(bodegas, bodegasIcon, 'Bodega');
 });
