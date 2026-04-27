@@ -36,7 +36,50 @@
     flex-shrink: 0;
 }
 
-/* Tooltip category label */
+/* Tooltip section (each category block inside popup) */
+.pro-tooltip-section {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.pro-tooltip-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.pro-tooltip-section:first-child {
+    padding-top: 0;
+}
+
+.pro-tooltip-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.pro-tooltip-category-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #90cdf4;
+    font-weight: 600;
+}
+
+.pro-tooltip-address {
+    width: 100%;
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    margin: 2px 0 0 16px !important;
+    line-height: 1.35;
+}
+
+/* Legacy class kept for compatibility */
 .pro-tooltip-category {
     font-size: 0.75rem;
     text-transform: uppercase;
